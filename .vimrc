@@ -15,8 +15,6 @@
 :inoremap [ []<Esc>i
 :inoremap {<CR> {<CR>}<Esc>ko<tab>
 
-:set expandtab
-
 syntax on
 set termguicolors
 colo gruvbox
