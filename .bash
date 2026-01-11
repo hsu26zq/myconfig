@@ -2,7 +2,6 @@
 alias rm='rm -i'
 alias mv='mv -i'
 alias cp='cp -i'
-. "$HOME/.cargo/env"
 
 # prompt
 FMT_BOLD="\e[1m"
