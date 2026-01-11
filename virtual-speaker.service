@@ -1,0 +1,12 @@
+[Unit]
+Description=Create Virtual Speaker Sink
+After=pipewire-pulse.service pulseaudio.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/pactl load-module module-null-sink sink_name=VirtualSpeaker sink_properties=device.description=VirtualSpeaker
+ExecStart=/usr/bin/pactl set-default-sink VirtualSpeaker
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target
