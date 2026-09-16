@@ -1,32 +1,28 @@
-FMT_BOLD="\e[1m"
 FMT_RESET="\e[0m"
-FMT_UNBOLD="\e[21m"
-FG_BLACK="\e[30m"
-FG_BLUE="\e[34m"
-FG_CYAN="\e[36m"
-FG_GREEN="\e[32m"
-FG_MAGENTA="\e[35m"
-FG_ORANGE="\e[38;5;208m"
-FG_RED="\e[31m"
 FG_WHITE="\e[97m"
-BG_BLUE="\e[44m"
-BG_GREEN="\e[42m"
-BG_MAGENTA="\e[45m"
-BG_RED="\e[41m"
-BG_ORANGE="\e[48;5;208m"
-BG_BLACK="\e[40m"
+FG_CYAN="\e[36m"
+
+# Red -> orange gradient, left to right (R and B fixed, G ramps 0 -> 165)
+FG_GRAD_1="\e[38;2;255;0;0m"
+BG_GRAD_1="\e[48;2;255;0;0m"
+FG_GRAD_2="\e[38;2;255;55;0m"
+BG_GRAD_2="\e[48;2;255;55;0m"
+FG_GRAD_3="\e[38;2;255;110;0m"
+BG_GRAD_3="\e[48;2;255;110;0m"
+FG_GRAD_4="\e[38;2;255;165;0m"
+BG_GRAD_4="\e[48;2;255;165;0m"
 
 SEP=$''
 
 PS1=\
-"\n\[${BG_GREEN}\] \[${FG_WHITE}\]\u \[${FMT_RESET}\]"\
-"\[${FG_GREEN}${BG_BLUE}\]${SEP}\[${FMT_RESET}\]"\
-"\[${BG_BLUE}\] \[${FG_WHITE}\]\h \[${FMT_RESET}\]"\
-"\[${FG_BLUE}${BG_MAGENTA}\]${SEP}\[${FMT_RESET}\]"\
-"\[${BG_MAGENTA}\] \[${FG_WHITE}\]\w \[${FMT_RESET}\]"\
-"\[${FG_MAGENTA}${BG_ORANGE}\]${SEP}\[${FMT_RESET}\]"\
-"\[${BG_ORANGE}\] \[${FG_WHITE}\]\A \[${FMT_RESET}\]"\
+"\n\[${BG_GRAD_1}\] \[${FG_WHITE}\]\u \[${FMT_RESET}\]"\
+"\[${FG_GRAD_1}${BG_GRAD_2}\]${SEP}\[${FMT_RESET}\]"\
+"\[${BG_GRAD_2}\] \[${FG_WHITE}\]\h \[${FMT_RESET}\]"\
+"\[${FG_GRAD_2}${BG_GRAD_3}\]${SEP}\[${FMT_RESET}\]"\
+"\[${BG_GRAD_3}\] \[${FG_WHITE}\]\w \[${FMT_RESET}\]"\
+"\[${FG_GRAD_3}${BG_GRAD_4}\]${SEP}\[${FMT_RESET}\]"\
+"\[${BG_GRAD_4}\] \[${FG_WHITE}\]\A \[${FMT_RESET}\]"\
 "\$(branch=\$(git symbolic-ref --quiet --short HEAD 2>/dev/null) && "\
-"printf '\[${FG_ORANGE}${BG_RED}\]${SEP}\[${FMT_RESET}\]\[${BG_RED}\] \[${FG_WHITE}\]%s \[${FMT_RESET}\]\[${FG_RED}\]${SEP}\[${FMT_RESET}\]' \"\$branch\" || "\
-"printf '\[${FG_ORANGE}\]${SEP}\[${FMT_RESET}\]')"\
+"printf '\[${FG_GRAD_4}${BG_GRAD_4}\]${SEP}\[${FMT_RESET}\]\[${BG_GRAD_4}\] \[${FG_WHITE}\]%s \[${FMT_RESET}\]\[${FG_GRAD_4}\]${SEP}\[${FMT_RESET}\]' \"\$branch\" || "\
+"printf '\[${FG_GRAD_4}\]${SEP}\[${FMT_RESET}\]')"\
 "\n \[${FG_CYAN}\]❯ \[${FMT_RESET}\]"
