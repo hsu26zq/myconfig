@@ -24,22 +24,25 @@ source ~/.bashrc
 - `common/profile.looks` — the fancy colored/powerline prompt, only sourced (on top of
   `profile`) when the `looks` scope is installed
 - `common/vimrc` — symlinked to `~/.vimrc`
-- `common/tmux.conf.local` — our override layer on top of
-  [gpakosz/.tmux](https://github.com/gpakosz/.tmux) (cloned fresh into `~/.tmux` at install
-  time, not vendored — same reasoning as the font/eza/bat downloads), symlinked to
-  `~/.tmux.conf.local`. `~/.tmux.conf` itself is symlinked straight to the upstream
-  `~/.tmux/.tmux.conf` — never edit that file directly, put changes in
-  `common/tmux.conf.local` instead so a future `git pull` inside `~/.tmux` doesn't clobber
-  them. Currently just enables mouse mode and a bigger history; everything else is
-  gpakosz's stock defaults (both `Ctrl+b` and `Ctrl+a` work as prefix, `h`/`j`/`k`/`l` for
-  pane nav, `-`/`_` for splits) — add more overrides here as you get familiar with it.
 - `work/gitconfig`, `work/ssh_config` — symlinked to `~/.gitconfig`, `~/.ssh/config`
 - `work/copy`, `work/flash` — scripts, made runnable anywhere via `PATH` (only when `work` scope is installed)
 
-`setup.sh install` backs up any pre-existing config it would overwrite as `<file>.bak`.
-`setup.sh uninstall [work]` removes the bashrc hook and symlinks, restoring backups if present.
+No tmux config lives in this repo — it isn't managed here at all. `zellij` (terminal
+multiplexer) is installed as a plain user-local binary into `~/.local/bin` on every
+`install`, same download-not-vendor approach as everything else below. No config file is
+tracked for it yet (stock defaults); add `common/zellij_config.kdl`, symlinked to
+`~/.config/zellij/config.kdl`, once there are actual overrides worth keeping.
 
-Two optional extra scopes, split by what they actually give you:
+`setup.sh install` backs up any pre-existing config it would overwrite as `<file>.bak`.
+
+`setup.sh uninstall` is a **full, unconditional teardown** — no scope flags needed. It
+removes everything this repo has ever installed: all symlinks (restoring `.bak` backups if
+present), `zellij`, the Nerd Font, `eza`, `bat`, and `fzf` (deleting the actual downloaded
+files, not just config wiring). Install-then-uninstall leaves nothing behind. Re-run
+`install [work] [looks] [tools]` afterward to set it back up.
+
+Two optional extra scopes for `install` only (`uninstall` always removes everything
+regardless), split by what they actually give you:
 
 `looks` — cosmetic, no new capability, just nicer-looking output:
 - Swaps the prompt from the plain default to `common/profile.looks` (colored segments,

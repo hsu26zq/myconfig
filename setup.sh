@@ -55,7 +55,6 @@ fi
 
 COMMON_LINKS=(
     "common/vimrc:$HOME/.vimrc"
-    "common/tmux.conf.local:$HOME/.tmux.conf.local"
 )
 
 WORK_LINKS=(
@@ -98,13 +97,32 @@ unlink_config() {
     fi
 }
 
-install_gpakosz_tmux() {
-    if [[ ! -d "$HOME/.tmux" ]]; then
-        echo "Cloning gpakosz/.tmux..."
-        git clone --depth 1 https://github.com/gpakosz/.tmux.git "$HOME/.tmux" \
-            || { echo "Clone failed."; return 1; }
+install_zellij() {
+    if command -v zellij >/dev/null 2>&1; then
+        echo "zellij already installed."
+        return
     fi
-    link_config "$HOME/.tmux/.tmux.conf" "$HOME/.tmux.conf"
+
+    echo "Installing zellij..."
+    local url
+    url=$(curl -fsSL https://api.github.com/repos/zellij-org/zellij/releases/latest \
+        | grep -o '"browser_download_url": *"[^"]*/zellij-x86_64-unknown-linux-musl\.tar\.gz"' \
+        | cut -d'"' -f4)
+    if [[ -n "$url" ]]; then
+        curl -fLo /tmp/zellij.tar.gz "$url" \
+            && tar -xzf /tmp/zellij.tar.gz -C "$HOME/.local/bin" zellij \
+            && chmod +x "$HOME/.local/bin/zellij" \
+            && echo "Installed zellij."
+        rm -f /tmp/zellij.tar.gz
+    else
+        echo "Could not find a zellij release asset."
+    fi
+}
+
+uninstall_zellij() {
+    rm -f "$HOME/.local/bin/zellij"
+    rm -rf "$HOME/.config/zellij" "$HOME/.cache/zellij" "$HOME/.local/share/zellij"
+    echo "Removed zellij."
 }
 
 install_font() {
@@ -128,6 +146,12 @@ install_font() {
     echo "Set it as your terminal emulator's font to see icons/powerline glyphs."
 }
 
+uninstall_font() {
+    rm -f "$HOME"/.local/share/fonts/JetBrainsMono*NerdFont*.ttf
+    fc-cache -f "$HOME/.local/share/fonts" >/dev/null 2>&1
+    echo "Removed JetBrainsMono Nerd Font."
+}
+
 install_eza() {
     if command -v eza >/dev/null 2>&1; then
         echo "eza already installed."
@@ -148,6 +172,11 @@ install_eza() {
     else
         echo "Could not find an eza release asset."
     fi
+}
+
+uninstall_eza() {
+    rm -f "$HOME/.local/bin/eza"
+    echo "Removed eza."
 }
 
 install_bat() {
@@ -174,6 +203,11 @@ install_bat() {
     fi
 }
 
+uninstall_bat() {
+    rm -f "$HOME/.local/bin/bat"
+    echo "Removed bat."
+}
+
 install_fzf() {
     if [[ -d "$HOME/.fzf" ]]; then
         echo "fzf already installed."
@@ -186,6 +220,11 @@ install_fzf() {
         && echo "Installed fzf."
 }
 
+uninstall_fzf() {
+    rm -rf "$HOME/.fzf" "$HOME/.fzf.bash"
+    echo "Removed fzf."
+}
+
 # Cosmetic: font + colorized ls/cat replacements. No new capability, just
 # nicer-looking output.
 install_looks() {
@@ -195,9 +234,19 @@ install_looks() {
     install_bat
 }
 
+uninstall_looks() {
+    uninstall_font
+    uninstall_eza
+    uninstall_bat
+}
+
 # Functional: actually changes what you can do, not just how it looks.
 install_tools() {
     install_fzf
+}
+
+uninstall_tools() {
+    uninstall_fzf
 }
 
 case "${1:-}" in
@@ -209,7 +258,8 @@ case "${1:-}" in
             echo "Installed bashrc hook."
         fi
 
-        install_gpakosz_tmux
+        mkdir -p "$HOME/.local/bin"
+        install_zellij
 
         for entry in "${COMMON_LINKS[@]}"; do
             link_config "${entry%%:*}" "${entry#*:}"
@@ -239,6 +289,10 @@ case "${1:-}" in
         ;;
 
     uninstall)
+        # Full teardown, always - no scope flags. Anything ever installed by
+        # this repo (symlinks, downloaded binaries, cloned repos) is removed
+        # so install-then-uninstall leaves nothing behind.
+
         if [[ -f "$BASHRC" ]]; then
             grep -Fvx "$SOURCE_LINE" "$BASHRC" > "$BASHRC.tmp"
             mv "$BASHRC.tmp" "$BASHRC"
@@ -248,16 +302,15 @@ case "${1:-}" in
             unlink_config "${entry#*:}"
         done
 
-        unlink_config "$HOME/.tmux.conf"
+        for entry in "${WORK_LINKS[@]}"; do
+            unlink_config "${entry#*:}"
+        done
 
-        if [[ -f "$WORK_MARKER" ]] || [[ " ${*:2} " == *" work "* ]]; then
-            for entry in "${WORK_LINKS[@]}"; do
-                unlink_config "${entry#*:}"
-            done
-            rm -f "$WORK_MARKER"
-        fi
+        uninstall_zellij
+        uninstall_looks
+        uninstall_tools
 
-        rm -f "$LOOKS_MARKER"
+        rm -f "$WORK_MARKER" "$LOOKS_MARKER"
 
         echo "Uninstalled."
         echo "Open a new shell."
@@ -266,7 +319,7 @@ case "${1:-}" in
     *)
         echo "Usage:"
         echo "  setup.sh install [work] [looks] [tools]"
-        echo "  setup.sh uninstall [work]"
+        echo "  setup.sh uninstall"
         exit 1
         ;;
 esac
