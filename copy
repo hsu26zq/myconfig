@@ -1,0 +1,63 @@
+#!/bin/bash
+set -euo pipefail
+
+IP="${IP:-192.168.1.1}"
+BOARD="root@$IP"
+BUILD="tommy@10.20.31.127"
+KERNEL="/mnt/data/tommy/nxp/tn-kernel"
+VER="${VER:-6.18.20-gbb62719e77a2-dirty}"
+
+declare -A PRESETS=(
+    [rkernel]="$BUILD:$KERNEL/arch/arm64/boot/Image|$BOARD:/run/media/boot-mmcblk1p1/"
+    [rmodule]="$BUILD:$KERNEL/modules/lib/modules/$VER|$BOARD:/lib/modules/"
+    [rdt]="$BUILD:$KERNEL/arch/arm64/boot/dts/freescale/overlays/imx8mp-edm-g-wb-tevs-csi1.dtbo|$BOARD:/run/media/boot-mmcblk1p1/"
+
+    [lkernel]="$BUILD:$KERNEL/arch/arm64/boot/Image|/run/media/tommy/boot/"
+    [lmodule]="$BUILD:$KERNEL/modules/lib/modules/$VER|/mnt/e/lib/modules/"
+    [ldt]="$BUILD:$KERNEL/arch/arm64/boot/dts/freescale/*.dtb*|/run/media/tommy/boot/"
+)
+
+KEY="${1:-}"
+
+if [[ -n "$KEY" && -n "${PRESETS[$KEY]:-}" ]]; then
+    IFS='|' read -r SRC DST <<< "${PRESETS[$KEY]}"
+else
+    SRC="${1:-}"
+    DST="${2:-.}"
+fi
+
+if [[ -z "$SRC" ]]; then
+    echo "Usage: copy SOURCE [DEST]"
+    echo "       copy rkernel|rmodule|rdt|lkernel|lmodule|ldt"
+    exit 1
+fi
+
+is_remote() {
+    [[ "$1" == *:* ]]
+}
+
+if is_remote "$SRC"; then
+    SRC_HOST="${SRC%%:*}"
+    SRC_PATH="${SRC#*:}"
+    SRC_PATH="${SRC_PATH%/}"
+    SRC_DIR="$(dirname "$SRC_PATH")"
+    SRC_NAME="$(basename "$SRC_PATH")"
+
+    if is_remote "$DST"; then
+        DST_HOST="${DST%%:*}"
+        DST_PATH="${DST#*:}"
+
+        ssh -o ConnectTimeout=10 "$SRC_HOST" \
+            "tar -C \"$SRC_DIR\" -cf - \"$SRC_NAME\"" |
+        ssh -o ConnectTimeout=10 "$DST_HOST" \
+            "mkdir -p \"$DST_PATH\" && tar -C \"$DST_PATH\" -xf -"
+    else
+        sudo mkdir -p "$DST"
+
+        ssh -o ConnectTimeout=10 "$SRC_HOST" \
+            "tar -C \"$SRC_DIR\" -cf - \"$SRC_NAME\"" |
+        sudo tar --no-same-owner -C "$DST" -xf -
+    fi
+else
+    rsync -a -e "ssh -o ConnectTimeout=10" "$SRC" "$DST"
+fi

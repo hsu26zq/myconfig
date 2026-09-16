@@ -1,0 +1,7 @@
+alias \
+ll='ls -alF' \
+la='ls -A' \
+gr='git remote' \
+gb='git branch' \
+glo='git log --oneline'
+
