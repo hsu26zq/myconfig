@@ -102,26 +102,44 @@ unlink_config() {
     fi
 }
 
-install_zellij() {
-    if command -v zellij >/dev/null 2>&1; then
-        echo "zellij already installed."
+# Shared by tools whose release tarball contains the binary somewhere
+# inside it, named exactly like the command - whether at the archive
+# root (bare "cmd" or "./cmd") or nested in a versioned directory
+# ("pkg-1.2.3/cmd"). Finds the actual entry rather than assuming its
+# path, since projects are inconsistent about this.
+install_binary() {
+    local cmd="$1" repo="$2" asset_pattern="$3"
+
+    if command -v "$cmd" >/dev/null 2>&1; then
+        echo "$cmd already installed."
         return
     fi
 
-    echo "Installing zellij..."
-    local url
-    url=$(curl -fsSL https://api.github.com/repos/zellij-org/zellij/releases/latest \
-        | grep -o '"browser_download_url": *"[^"]*/zellij-x86_64-unknown-linux-musl\.tar\.gz"' \
+    echo "Installing $cmd..."
+    local url entry path
+    url=$(curl -fsSL "https://api.github.com/repos/$repo/releases/latest" \
+        | grep -o "\"browser_download_url\": *\"[^\"]*${asset_pattern}\"" \
         | cut -d'"' -f4)
     if [[ -n "$url" ]]; then
-        curl -fLo /tmp/zellij.tar.gz "$url" \
-            && tar -xzf /tmp/zellij.tar.gz -C "$HOME/.local/bin" zellij \
-            && chmod +x "$HOME/.local/bin/zellij" \
-            && echo "Installed zellij."
-        rm -f /tmp/zellij.tar.gz
+        curl -fLo "/tmp/$cmd.tar.gz" "$url"
+        # Archive entry may be "cmd", "./cmd", or "pkg-1.2.3/cmd" depending
+        # on the project. Extract using the raw entry (tar needs an exact
+        # match), but strip any "./" prefix before using it as a local
+        # path, so cleanup targets the real file/directory, not "/tmp/.".
+        entry=$(tar -tzf "/tmp/$cmd.tar.gz" | grep -E "(^|/)$cmd\$" | head -1)
+        path="${entry#./}"
+        tar -xzf "/tmp/$cmd.tar.gz" -C /tmp "$entry" \
+            && cp "/tmp/$path" "$HOME/.local/bin/$cmd" \
+            && chmod +x "$HOME/.local/bin/$cmd" \
+            && echo "Installed $cmd."
+        rm -rf "/tmp/$cmd.tar.gz" "/tmp/${path%%/*}"
     else
-        echo "Could not find a zellij release asset."
+        echo "Could not find a $cmd release asset."
     fi
+}
+
+install_zellij() {
+    install_binary zellij zellij-org/zellij '/zellij-x86_64-unknown-linux-musl\.tar\.gz'
 }
 
 uninstall_zellij() {
@@ -158,25 +176,7 @@ uninstall_font() {
 }
 
 install_eza() {
-    if command -v eza >/dev/null 2>&1; then
-        echo "eza already installed."
-        return
-    fi
-
-    echo "Installing eza..."
-    local eza_url
-    eza_url=$(curl -fsSL https://api.github.com/repos/eza-community/eza/releases/latest \
-        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
-        | cut -d'"' -f4)
-    if [[ -n "$eza_url" ]]; then
-        curl -fLo /tmp/eza.tar.gz "$eza_url" \
-            && tar -xzf /tmp/eza.tar.gz -C "$HOME/.local/bin" ./eza \
-            && chmod +x "$HOME/.local/bin/eza" \
-            && echo "Installed eza."
-        rm -f /tmp/eza.tar.gz
-    else
-        echo "Could not find an eza release asset."
-    fi
+    install_binary eza eza-community/eza 'x86_64-unknown-linux-gnu\.tar\.gz'
 }
 
 uninstall_eza() {
@@ -185,27 +185,7 @@ uninstall_eza() {
 }
 
 install_bat() {
-    if command -v bat >/dev/null 2>&1; then
-        echo "bat already installed."
-        return
-    fi
-
-    echo "Installing bat..."
-    local bat_url bat_dir
-    bat_url=$(curl -fsSL https://api.github.com/repos/sharkdp/bat/releases/latest \
-        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
-        | cut -d'"' -f4)
-    if [[ -n "$bat_url" ]]; then
-        curl -fLo /tmp/bat.tar.gz "$bat_url"
-        bat_dir=$(tar -tzf /tmp/bat.tar.gz | head -1 | cut -d/ -f1)
-        tar -xzf /tmp/bat.tar.gz -C /tmp "$bat_dir/bat" \
-            && cp "/tmp/$bat_dir/bat" "$HOME/.local/bin/bat" \
-            && chmod +x "$HOME/.local/bin/bat" \
-            && echo "Installed bat."
-        rm -rf /tmp/bat.tar.gz "/tmp/$bat_dir"
-    else
-        echo "Could not find a bat release asset."
-    fi
+    install_binary bat sharkdp/bat 'x86_64-unknown-linux-gnu\.tar\.gz'
 }
 
 uninstall_bat() {
@@ -214,27 +194,7 @@ uninstall_bat() {
 }
 
 install_delta() {
-    if command -v delta >/dev/null 2>&1; then
-        echo "delta already installed."
-        return
-    fi
-
-    echo "Installing delta..."
-    local url dir
-    url=$(curl -fsSL https://api.github.com/repos/dandavison/delta/releases/latest \
-        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
-        | cut -d'"' -f4)
-    if [[ -n "$url" ]]; then
-        curl -fLo /tmp/delta.tar.gz "$url"
-        dir=$(tar -tzf /tmp/delta.tar.gz | grep -E "/delta$" | head -1)
-        tar -xzf /tmp/delta.tar.gz -C /tmp "$dir" \
-            && cp "/tmp/$dir" "$HOME/.local/bin/delta" \
-            && chmod +x "$HOME/.local/bin/delta" \
-            && echo "Installed delta."
-        rm -rf /tmp/delta.tar.gz "/tmp/$(dirname "$dir")"
-    else
-        echo "Could not find a delta release asset."
-    fi
+    install_binary delta dandavison/delta 'x86_64-unknown-linux-gnu\.tar\.gz'
 }
 
 uninstall_delta() {
@@ -271,25 +231,7 @@ uninstall_btop() {
 }
 
 install_starship() {
-    if command -v starship >/dev/null 2>&1; then
-        echo "starship already installed."
-        return
-    fi
-
-    echo "Installing starship..."
-    local url
-    url=$(curl -fsSL https://api.github.com/repos/starship/starship/releases/latest \
-        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
-        | cut -d'"' -f4)
-    if [[ -n "$url" ]]; then
-        curl -fLo /tmp/starship.tar.gz "$url" \
-            && tar -xzf /tmp/starship.tar.gz -C "$HOME/.local/bin" starship \
-            && chmod +x "$HOME/.local/bin/starship" \
-            && echo "Installed starship."
-        rm -f /tmp/starship.tar.gz
-    else
-        echo "Could not find a starship release asset."
-    fi
+    install_binary starship starship/starship 'x86_64-unknown-linux-gnu\.tar\.gz'
 }
 
 uninstall_starship() {
@@ -316,27 +258,7 @@ uninstall_fzf() {
 }
 
 install_ripgrep() {
-    if command -v rg >/dev/null 2>&1; then
-        echo "ripgrep already installed."
-        return
-    fi
-
-    echo "Installing ripgrep..."
-    local url dir
-    url=$(curl -fsSL https://api.github.com/repos/BurntSushi/ripgrep/releases/latest \
-        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-musl\.tar\.gz"' \
-        | cut -d'"' -f4)
-    if [[ -n "$url" ]]; then
-        curl -fLo /tmp/rg.tar.gz "$url"
-        dir=$(tar -tzf /tmp/rg.tar.gz | grep -E "/rg$" | head -1)
-        tar -xzf /tmp/rg.tar.gz -C /tmp "$dir" \
-            && cp "/tmp/$dir" "$HOME/.local/bin/rg" \
-            && chmod +x "$HOME/.local/bin/rg" \
-            && echo "Installed ripgrep."
-        rm -rf /tmp/rg.tar.gz "/tmp/$(dirname "$dir")"
-    else
-        echo "Could not find a ripgrep release asset."
-    fi
+    install_binary rg BurntSushi/ripgrep 'x86_64-unknown-linux-musl\.tar\.gz'
 }
 
 uninstall_ripgrep() {
@@ -345,27 +267,7 @@ uninstall_ripgrep() {
 }
 
 install_fd() {
-    if command -v fd >/dev/null 2>&1; then
-        echo "fd already installed."
-        return
-    fi
-
-    echo "Installing fd..."
-    local url dir
-    url=$(curl -fsSL https://api.github.com/repos/sharkdp/fd/releases/latest \
-        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
-        | cut -d'"' -f4)
-    if [[ -n "$url" ]]; then
-        curl -fLo /tmp/fd.tar.gz "$url"
-        dir=$(tar -tzf /tmp/fd.tar.gz | grep -E "/fd$" | head -1)
-        tar -xzf /tmp/fd.tar.gz -C /tmp "$dir" \
-            && cp "/tmp/$dir" "$HOME/.local/bin/fd" \
-            && chmod +x "$HOME/.local/bin/fd" \
-            && echo "Installed fd."
-        rm -rf /tmp/fd.tar.gz "/tmp/$(dirname "$dir")"
-    else
-        echo "Could not find an fd release asset."
-    fi
+    install_binary fd sharkdp/fd 'x86_64-unknown-linux-gnu\.tar\.gz'
 }
 
 uninstall_fd() {
@@ -374,25 +276,7 @@ uninstall_fd() {
 }
 
 install_zoxide() {
-    if command -v zoxide >/dev/null 2>&1; then
-        echo "zoxide already installed."
-        return
-    fi
-
-    echo "Installing zoxide..."
-    local url
-    url=$(curl -fsSL https://api.github.com/repos/ajeetdsouza/zoxide/releases/latest \
-        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-musl\.tar\.gz"' \
-        | cut -d'"' -f4)
-    if [[ -n "$url" ]]; then
-        curl -fLo /tmp/zoxide.tar.gz "$url" \
-            && tar -xzf /tmp/zoxide.tar.gz -C "$HOME/.local/bin" zoxide \
-            && chmod +x "$HOME/.local/bin/zoxide" \
-            && echo "Installed zoxide."
-        rm -f /tmp/zoxide.tar.gz
-    else
-        echo "Could not find a zoxide release asset."
-    fi
+    install_binary zoxide ajeetdsouza/zoxide 'x86_64-unknown-linux-musl\.tar\.gz'
 }
 
 uninstall_zoxide() {
@@ -427,25 +311,7 @@ uninstall_jq() {
 }
 
 install_lazygit() {
-    if command -v lazygit >/dev/null 2>&1; then
-        echo "lazygit already installed."
-        return
-    fi
-
-    echo "Installing lazygit..."
-    local url
-    url=$(curl -fsSL https://api.github.com/repos/jesseduffield/lazygit/releases/latest \
-        | grep -o '"browser_download_url": *"[^"]*linux_x86_64\.tar\.gz"' \
-        | cut -d'"' -f4)
-    if [[ -n "$url" ]]; then
-        curl -fLo /tmp/lazygit.tar.gz "$url" \
-            && tar -xzf /tmp/lazygit.tar.gz -C "$HOME/.local/bin" lazygit \
-            && chmod +x "$HOME/.local/bin/lazygit" \
-            && echo "Installed lazygit."
-        rm -f /tmp/lazygit.tar.gz
-    else
-        echo "Could not find a lazygit release asset."
-    fi
+    install_binary lazygit jesseduffield/lazygit 'linux_x86_64\.tar\.gz'
 }
 
 uninstall_lazygit() {
