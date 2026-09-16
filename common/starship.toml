@@ -15,7 +15,7 @@ format = "[ $hostname ]($style)[](fg:#ff3700 bg:#ff6e00)"
 disabled = false
 
 [directory]
-style = "bg:#ff6e00 fg:#ffffff"
+style = "bg:#ff6e00 fg:#000000"
 format = "[ $path ]($style)[](fg:#ff6e00 bg:#ffa500)"
 truncation_length = 3
 truncate_to_repo = false
