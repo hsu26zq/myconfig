@@ -4,18 +4,19 @@ add_newline = true
 [username]
 style_user = "bg:#ff0000 fg:#ffffff"
 style_root = "bg:#ff0000 fg:#ffffff"
+# text gradient: white (leftmost) -> black (rightmost), one flat color per block
 format = "[ $user ]($style)[](fg:#ff0000 bg:#ff3700)"
 show_always = true
 disabled = false
 
 [hostname]
 ssh_only = false
-style = "bg:#ff3700 fg:#ffffff"
+style = "bg:#ff3700 fg:#aaaaaa"
 format = "[ $hostname ]($style)[](fg:#ff3700 bg:#ff6e00)"
 disabled = false
 
 [directory]
-style = "bg:#ff6e00 fg:#ffffff"
+style = "bg:#ff6e00 fg:#555555"
 format = "[ $path ]($style)[](fg:#ff6e00 bg:#ffa500)"
 truncation_length = 3
 truncate_to_repo = false
@@ -23,12 +24,12 @@ truncate_to_repo = false
 [time]
 disabled = false
 time_format = "%H:%M"
-style = "bg:#ffa500 fg:#ffffff"
+style = "bg:#ffa500 fg:#000000"
 format = "[ $time ]($style)"
 
 [git_branch]
 symbol = ""
-style = "bg:#ffa500 fg:#ffffff"
+style = "bg:#ffa500 fg:#000000"
 format = "[](fg:#ffa500 bg:#ffa500)[ $symbol$branch ]($style)"
 
 [line_break]
