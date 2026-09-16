@@ -1,6 +1,0 @@
-- [x] `profile` — PS1/prompt + shell options/exports, sourced once by setup.sh
-- [x] `eza`/`bat` aliases in `alias` — with existence checks
-- [x] `gitconfig` — moved in and symlinked via setup.sh
-- [x] `.gitignore` — stop stray secrets/`.bak` files from being committed
-- [x] `README.md`
-- [x] `ssh_config` — moved in and symlinked via setup.sh; added `buildhost`/`board` aliases for the IPs hardcoded in `flash`/`copy`
