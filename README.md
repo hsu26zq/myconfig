@@ -10,9 +10,9 @@ Split into two scopes:
 ## Install
 
 ```bash
-./setup.sh install                    # common/ only
-./setup.sh install work               # common/ + work/
-./setup.sh install work font tools    # + Nerd Font + eza/bat/fzf (all downloaded, not vendored)
+./setup.sh install                     # common/ only
+./setup.sh install work                # common/ + work/
+./setup.sh install work looks tools    # + cosmetic (looks) and functional (tools) extras
 source ~/.bashrc
 ```
 
@@ -27,16 +27,24 @@ source ~/.bashrc
 `setup.sh install` backs up any pre-existing config it would overwrite as `<file>.bak`.
 `setup.sh uninstall [work]` removes the bashrc hook and symlinks, restoring backups if present.
 
-`font` downloads JetBrainsMono Nerd Font from its GitHub releases and installs it to
-`~/.local/share/fonts` — not vendored in this repo (binary, ~130MB). Needs network access
-once, at install time. After installing, set it as your terminal emulator's font manually
-to see the icon/powerline glyphs — that part can't be scripted from here.
+Two optional extra scopes, split by what they actually give you:
 
-`tools` downloads `eza`, `bat`, and `fzf` as user-local binaries — `eza`/`bat` into
-`~/.local/bin`, `fzf` cloned into `~/.fzf` via its official installer (key-bindings and
-completion, but not its own `~/.bashrc` hook, since `setup.sh` wires it in itself). No
-`sudo`, nothing outside `$HOME`. `common/alias` already has `command -v` checks that pick
-up `eza`/`bat` automatically once installed.
+`looks` — cosmetic, no new capability, just nicer-looking output:
+- JetBrainsMono Nerd Font, downloaded from its GitHub releases into `~/.local/share/fonts`
+  (not vendored in this repo — binary, ~130MB). After installing, set it as your terminal
+  emulator's font manually to see the icon/powerline glyphs — that part can't be scripted.
+- `eza`, `bat` — colorized `ls`/`cat` replacements, downloaded as static binaries into
+  `~/.local/bin`. `common/alias` already has `command -v` checks that pick them up
+  automatically once installed.
+
+`tools` — functional, changes what you can actually do:
+- `fzf` — fuzzy history/file search (`Ctrl+R`/`Ctrl+T`), genuinely different from bash's
+  built-in reverse-search, not just a visual upgrade. Cloned into `~/.fzf` via its official
+  installer (key-bindings and completion, but not its own `~/.bashrc` hook, since
+  `setup.sh` wires it in itself).
+
+Both scopes install entirely under `$HOME` — no `sudo`, nothing system-wide. Need network
+access once, at install time.
 
 ## Scripts
 

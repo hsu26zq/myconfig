@@ -113,57 +113,76 @@ install_font() {
     echo "Set it as your terminal emulator's font to see icons/powerline glyphs."
 }
 
-install_tools() {
-    mkdir -p "$HOME/.local/bin"
-
+install_eza() {
     if command -v eza >/dev/null 2>&1; then
         echo "eza already installed."
-    else
-        echo "Installing eza..."
-        local eza_url
-        eza_url=$(curl -fsSL https://api.github.com/repos/eza-community/eza/releases/latest \
-            | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
-            | cut -d'"' -f4)
-        if [[ -n "$eza_url" ]]; then
-            curl -fLo /tmp/eza.tar.gz "$eza_url" \
-                && tar -xzf /tmp/eza.tar.gz -C "$HOME/.local/bin" ./eza \
-                && chmod +x "$HOME/.local/bin/eza" \
-                && echo "Installed eza."
-            rm -f /tmp/eza.tar.gz
-        else
-            echo "Could not find an eza release asset."
-        fi
+        return
     fi
 
+    echo "Installing eza..."
+    local eza_url
+    eza_url=$(curl -fsSL https://api.github.com/repos/eza-community/eza/releases/latest \
+        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
+        | cut -d'"' -f4)
+    if [[ -n "$eza_url" ]]; then
+        curl -fLo /tmp/eza.tar.gz "$eza_url" \
+            && tar -xzf /tmp/eza.tar.gz -C "$HOME/.local/bin" ./eza \
+            && chmod +x "$HOME/.local/bin/eza" \
+            && echo "Installed eza."
+        rm -f /tmp/eza.tar.gz
+    else
+        echo "Could not find an eza release asset."
+    fi
+}
+
+install_bat() {
     if command -v bat >/dev/null 2>&1; then
         echo "bat already installed."
-    else
-        echo "Installing bat..."
-        local bat_url bat_dir
-        bat_url=$(curl -fsSL https://api.github.com/repos/sharkdp/bat/releases/latest \
-            | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
-            | cut -d'"' -f4)
-        if [[ -n "$bat_url" ]]; then
-            curl -fLo /tmp/bat.tar.gz "$bat_url"
-            bat_dir=$(tar -tzf /tmp/bat.tar.gz | head -1 | cut -d/ -f1)
-            tar -xzf /tmp/bat.tar.gz -C /tmp "$bat_dir/bat" \
-                && cp "/tmp/$bat_dir/bat" "$HOME/.local/bin/bat" \
-                && chmod +x "$HOME/.local/bin/bat" \
-                && echo "Installed bat."
-            rm -rf /tmp/bat.tar.gz "/tmp/$bat_dir"
-        else
-            echo "Could not find a bat release asset."
-        fi
+        return
     fi
 
+    echo "Installing bat..."
+    local bat_url bat_dir
+    bat_url=$(curl -fsSL https://api.github.com/repos/sharkdp/bat/releases/latest \
+        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
+        | cut -d'"' -f4)
+    if [[ -n "$bat_url" ]]; then
+        curl -fLo /tmp/bat.tar.gz "$bat_url"
+        bat_dir=$(tar -tzf /tmp/bat.tar.gz | head -1 | cut -d/ -f1)
+        tar -xzf /tmp/bat.tar.gz -C /tmp "$bat_dir/bat" \
+            && cp "/tmp/$bat_dir/bat" "$HOME/.local/bin/bat" \
+            && chmod +x "$HOME/.local/bin/bat" \
+            && echo "Installed bat."
+        rm -rf /tmp/bat.tar.gz "/tmp/$bat_dir"
+    else
+        echo "Could not find a bat release asset."
+    fi
+}
+
+install_fzf() {
     if [[ -d "$HOME/.fzf" ]]; then
         echo "fzf already installed."
-    else
-        echo "Installing fzf..."
-        git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf" \
-            && "$HOME/.fzf/install" --key-bindings --completion --no-update-rc \
-            && echo "Installed fzf."
+        return
     fi
+
+    echo "Installing fzf..."
+    git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf" \
+        && "$HOME/.fzf/install" --key-bindings --completion --no-update-rc \
+        && echo "Installed fzf."
+}
+
+# Cosmetic: font + colorized ls/cat replacements. No new capability, just
+# nicer-looking output.
+install_looks() {
+    mkdir -p "$HOME/.local/bin"
+    install_font
+    install_eza
+    install_bat
+}
+
+# Functional: actually changes what you can do, not just how it looks.
+install_tools() {
+    install_fzf
 }
 
 case "${1:-}" in
@@ -188,8 +207,8 @@ case "${1:-}" in
                     touch "$WORK_MARKER"
                     echo "Work scope enabled."
                     ;;
-                font)
-                    install_font
+                looks)
+                    install_looks
                     ;;
                 tools)
                     install_tools
@@ -223,7 +242,7 @@ case "${1:-}" in
 
     *)
         echo "Usage:"
-        echo "  setup.sh install [work] [font] [tools]"
+        echo "  setup.sh install [work] [looks] [tools]"
         echo "  setup.sh uninstall [work]"
         exit 1
         ;;
