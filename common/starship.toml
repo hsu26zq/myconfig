@@ -2,15 +2,15 @@ format = "$username$hostname$directory$time$git_branch[](fg:#ffa500)$line_bre
 add_newline = true
 
 [username]
-style_user = "bg:#ff0000 fg:#ffffff"
-style_root = "bg:#ff0000 fg:#ffffff"
+style_user = "bg:#ff0000 fg:#000000"
+style_root = "bg:#ff0000 fg:#000000"
 format = "[ $user ]($style)[](fg:#ff0000 bg:#ff3700)"
 show_always = true
 disabled = false
 
 [hostname]
 ssh_only = false
-style = "bg:#ff3700 fg:#ffffff"
+style = "bg:#ff3700 fg:#000000"
 format = "[ $hostname ]($style)[](fg:#ff3700 bg:#ff6e00)"
 disabled = false
 
