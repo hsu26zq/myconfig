@@ -13,6 +13,7 @@ if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
     [[ -f "$WORK_MARKER" ]] && export PATH="$WORK_DIR:$PATH"
     [[ -d "$HOME/.fzf/bin" ]] && export PATH="$HOME/.fzf/bin:$PATH"
     [[ -f "$HOME/.fzf.bash" ]] && source "$HOME/.fzf.bash"
+    command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init bash)"
 
     if [[ -f "$COMMON_DIR/profile" ]]; then
         source "$COMMON_DIR/profile"
@@ -60,6 +61,10 @@ COMMON_LINKS=(
 WORK_LINKS=(
     "work/gitconfig:$HOME/.gitconfig"
     "work/ssh_config:$HOME/.ssh/config"
+)
+
+LOOKS_LINKS=(
+    "common/starship.toml:$HOME/.config/starship.toml"
 )
 
 link_config() {
@@ -208,6 +213,91 @@ uninstall_bat() {
     echo "Removed bat."
 }
 
+install_delta() {
+    if command -v delta >/dev/null 2>&1; then
+        echo "delta already installed."
+        return
+    fi
+
+    echo "Installing delta..."
+    local url dir
+    url=$(curl -fsSL https://api.github.com/repos/dandavison/delta/releases/latest \
+        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
+        | cut -d'"' -f4)
+    if [[ -n "$url" ]]; then
+        curl -fLo /tmp/delta.tar.gz "$url"
+        dir=$(tar -tzf /tmp/delta.tar.gz | grep -E "/delta$" | head -1)
+        tar -xzf /tmp/delta.tar.gz -C /tmp "$dir" \
+            && cp "/tmp/$dir" "$HOME/.local/bin/delta" \
+            && chmod +x "$HOME/.local/bin/delta" \
+            && echo "Installed delta."
+        rm -rf /tmp/delta.tar.gz "/tmp/$(dirname "$dir")"
+    else
+        echo "Could not find a delta release asset."
+    fi
+}
+
+uninstall_delta() {
+    rm -f "$HOME/.local/bin/delta"
+    echo "Removed delta."
+}
+
+install_btop() {
+    if command -v btop >/dev/null 2>&1; then
+        echo "btop already installed."
+        return
+    fi
+
+    echo "Installing btop..."
+    local url
+    url=$(curl -fsSL https://api.github.com/repos/aristocratos/btop/releases/latest \
+        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-musl\.tar\.gz"' \
+        | cut -d'"' -f4)
+    if [[ -n "$url" ]]; then
+        curl -fLo /tmp/btop.tar.gz "$url" \
+            && tar -xzf /tmp/btop.tar.gz -C /tmp ./btop/bin/btop \
+            && cp /tmp/btop/bin/btop "$HOME/.local/bin/btop" \
+            && chmod +x "$HOME/.local/bin/btop" \
+            && echo "Installed btop."
+        rm -rf /tmp/btop.tar.gz /tmp/btop
+    else
+        echo "Could not find a btop release asset."
+    fi
+}
+
+uninstall_btop() {
+    rm -f "$HOME/.local/bin/btop"
+    echo "Removed btop."
+}
+
+install_starship() {
+    if command -v starship >/dev/null 2>&1; then
+        echo "starship already installed."
+        return
+    fi
+
+    echo "Installing starship..."
+    local url
+    url=$(curl -fsSL https://api.github.com/repos/starship/starship/releases/latest \
+        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
+        | cut -d'"' -f4)
+    if [[ -n "$url" ]]; then
+        curl -fLo /tmp/starship.tar.gz "$url" \
+            && tar -xzf /tmp/starship.tar.gz -C "$HOME/.local/bin" starship \
+            && chmod +x "$HOME/.local/bin/starship" \
+            && echo "Installed starship."
+        rm -f /tmp/starship.tar.gz
+    else
+        echo "Could not find a starship release asset."
+    fi
+}
+
+uninstall_starship() {
+    rm -f "$HOME/.local/bin/starship"
+    rm -f "$HOME/.config/starship.toml"
+    echo "Removed starship."
+}
+
 install_fzf() {
     if [[ -d "$HOME/.fzf" ]]; then
         echo "fzf already installed."
@@ -225,28 +315,182 @@ uninstall_fzf() {
     echo "Removed fzf."
 }
 
-# Cosmetic: font + colorized ls/cat replacements. No new capability, just
-# nicer-looking output.
+install_ripgrep() {
+    if command -v rg >/dev/null 2>&1; then
+        echo "ripgrep already installed."
+        return
+    fi
+
+    echo "Installing ripgrep..."
+    local url dir
+    url=$(curl -fsSL https://api.github.com/repos/BurntSushi/ripgrep/releases/latest \
+        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-musl\.tar\.gz"' \
+        | cut -d'"' -f4)
+    if [[ -n "$url" ]]; then
+        curl -fLo /tmp/rg.tar.gz "$url"
+        dir=$(tar -tzf /tmp/rg.tar.gz | grep -E "/rg$" | head -1)
+        tar -xzf /tmp/rg.tar.gz -C /tmp "$dir" \
+            && cp "/tmp/$dir" "$HOME/.local/bin/rg" \
+            && chmod +x "$HOME/.local/bin/rg" \
+            && echo "Installed ripgrep."
+        rm -rf /tmp/rg.tar.gz "/tmp/$(dirname "$dir")"
+    else
+        echo "Could not find a ripgrep release asset."
+    fi
+}
+
+uninstall_ripgrep() {
+    rm -f "$HOME/.local/bin/rg"
+    echo "Removed ripgrep."
+}
+
+install_fd() {
+    if command -v fd >/dev/null 2>&1; then
+        echo "fd already installed."
+        return
+    fi
+
+    echo "Installing fd..."
+    local url dir
+    url=$(curl -fsSL https://api.github.com/repos/sharkdp/fd/releases/latest \
+        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
+        | cut -d'"' -f4)
+    if [[ -n "$url" ]]; then
+        curl -fLo /tmp/fd.tar.gz "$url"
+        dir=$(tar -tzf /tmp/fd.tar.gz | grep -E "/fd$" | head -1)
+        tar -xzf /tmp/fd.tar.gz -C /tmp "$dir" \
+            && cp "/tmp/$dir" "$HOME/.local/bin/fd" \
+            && chmod +x "$HOME/.local/bin/fd" \
+            && echo "Installed fd."
+        rm -rf /tmp/fd.tar.gz "/tmp/$(dirname "$dir")"
+    else
+        echo "Could not find an fd release asset."
+    fi
+}
+
+uninstall_fd() {
+    rm -f "$HOME/.local/bin/fd"
+    echo "Removed fd."
+}
+
+install_zoxide() {
+    if command -v zoxide >/dev/null 2>&1; then
+        echo "zoxide already installed."
+        return
+    fi
+
+    echo "Installing zoxide..."
+    local url
+    url=$(curl -fsSL https://api.github.com/repos/ajeetdsouza/zoxide/releases/latest \
+        | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-musl\.tar\.gz"' \
+        | cut -d'"' -f4)
+    if [[ -n "$url" ]]; then
+        curl -fLo /tmp/zoxide.tar.gz "$url" \
+            && tar -xzf /tmp/zoxide.tar.gz -C "$HOME/.local/bin" zoxide \
+            && chmod +x "$HOME/.local/bin/zoxide" \
+            && echo "Installed zoxide."
+        rm -f /tmp/zoxide.tar.gz
+    else
+        echo "Could not find a zoxide release asset."
+    fi
+}
+
+uninstall_zoxide() {
+    rm -f "$HOME/.local/bin/zoxide"
+    rm -rf "$HOME/.local/share/zoxide" "$HOME/.cache/zoxide"
+    echo "Removed zoxide."
+}
+
+install_jq() {
+    if command -v jq >/dev/null 2>&1; then
+        echo "jq already installed."
+        return
+    fi
+
+    echo "Installing jq..."
+    local url
+    url=$(curl -fsSL https://api.github.com/repos/jqlang/jq/releases/latest \
+        | grep -o '"browser_download_url": *"[^"]*jq-linux-amd64"' \
+        | cut -d'"' -f4)
+    if [[ -n "$url" ]]; then
+        curl -fLo "$HOME/.local/bin/jq" "$url" \
+            && chmod +x "$HOME/.local/bin/jq" \
+            && echo "Installed jq."
+    else
+        echo "Could not find a jq release asset."
+    fi
+}
+
+uninstall_jq() {
+    rm -f "$HOME/.local/bin/jq"
+    echo "Removed jq."
+}
+
+install_lazygit() {
+    if command -v lazygit >/dev/null 2>&1; then
+        echo "lazygit already installed."
+        return
+    fi
+
+    echo "Installing lazygit..."
+    local url
+    url=$(curl -fsSL https://api.github.com/repos/jesseduffield/lazygit/releases/latest \
+        | grep -o '"browser_download_url": *"[^"]*linux_x86_64\.tar\.gz"' \
+        | cut -d'"' -f4)
+    if [[ -n "$url" ]]; then
+        curl -fLo /tmp/lazygit.tar.gz "$url" \
+            && tar -xzf /tmp/lazygit.tar.gz -C "$HOME/.local/bin" lazygit \
+            && chmod +x "$HOME/.local/bin/lazygit" \
+            && echo "Installed lazygit."
+        rm -f /tmp/lazygit.tar.gz
+    else
+        echo "Could not find a lazygit release asset."
+    fi
+}
+
+uninstall_lazygit() {
+    rm -f "$HOME/.local/bin/lazygit"
+    echo "Removed lazygit."
+}
+
+# Cosmetic: font + colorized ls/cat/diff/top replacements, and the fancy
+# prompt (starship). No new capability, just nicer-looking output.
 install_looks() {
     mkdir -p "$HOME/.local/bin"
     install_font
     install_eza
     install_bat
+    install_delta
+    install_btop
+    install_starship
 }
 
 uninstall_looks() {
     uninstall_font
     uninstall_eza
     uninstall_bat
+    uninstall_delta
+    uninstall_btop
+    uninstall_starship
 }
 
 # Functional: actually changes what you can do, not just how it looks.
 install_tools() {
     install_fzf
+    install_ripgrep
+    install_fd
+    install_zoxide
+    install_jq
+    install_lazygit
 }
 
 uninstall_tools() {
     uninstall_fzf
+    uninstall_ripgrep
+    uninstall_fd
+    uninstall_zoxide
+    uninstall_jq
+    uninstall_lazygit
 }
 
 case "${1:-}" in
@@ -276,6 +520,9 @@ case "${1:-}" in
                     ;;
                 looks)
                     install_looks
+                    for entry in "${LOOKS_LINKS[@]}"; do
+                        link_config "${entry%%:*}" "${entry#*:}"
+                    done
                     touch "$LOOKS_MARKER"
                     echo "Looks scope enabled (fancy prompt active)."
                     ;;
@@ -303,6 +550,10 @@ case "${1:-}" in
         done
 
         for entry in "${WORK_LINKS[@]}"; do
+            unlink_config "${entry#*:}"
+        done
+
+        for entry in "${LOOKS_LINKS[@]}"; do
             unlink_config "${entry#*:}"
         done
 
