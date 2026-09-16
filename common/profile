@@ -11,16 +11,17 @@ FG_WHITE="\e[97m"
 BG_BLUE="\e[44m"
 BG_GREEN="\e[42m"
 BG_MAGENTA="\e[45m"
+BG_RED="\e[41m"
+BG_ORANGE="\e[48;5;208m"
 BG_BLACK="\e[40m"
 
 PS1=\
-"\n\[${FMT_BOLD}${BG_GREEN}\] \[${FG_RED}\] \[${FG_WHITE}\]\u@\h "\
-"\[${FG_GREEN}${BG_BLUE}\] "\
-"\[${FG_WHITE}\]\w "\
-"\[${FMT_RESET}\]"\
+"\n\[${BG_GREEN}\] \[${FG_WHITE}\]\u \[${FMT_RESET}\]"\
+"\[${BG_BLUE}\] \[${FG_WHITE}\]\h \[${FMT_RESET}\]"\
+"\[${BG_MAGENTA}\] \[${FG_WHITE}\]\w \[${FMT_RESET}\]"\
+"\[${BG_ORANGE}\] \[${FG_WHITE}\]\A \[${FMT_RESET}\]"\
 "\$(branch=\$(git symbolic-ref --quiet --short HEAD 2>/dev/null) && "\
-"printf '\[${FG_BLUE}${BG_MAGENTA}\] \[${FMT_BOLD}${FG_WHITE}\] %s \[${FG_MAGENTA}${BG_BLACK}${FMT_RESET}\]' \"\$branch\" || "\
-"printf '\[%s%s\]\[%s\]' \"$FG_BLUE\" \"$BG_BLACK\" \"$FMT_RESET\")"\
+"printf '\[${BG_RED}\] \[${FG_WHITE}\]%s \[${FMT_RESET}\]' \"\$branch\")"\
 "\n \[${FG_GREEN}\]╰ \[${FG_CYAN}\]\\\$ \[${FMT_RESET}\]"
 
 HISTSIZE=5000
