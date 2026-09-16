@@ -14,12 +14,12 @@ BG_MAGENTA="\e[45m"
 BG_BLACK="\e[40m"
 
 PS1=\
-"\n\[${FMT_BOLD}${BG_GREEN}\] \[${FG_RED}\] \[${FG_BLACK}\]\u "\
+"\n\[${FMT_BOLD}${BG_GREEN}\] \[${FG_RED}\] \[${FG_WHITE}\]\u "\
 "\[${FG_GREEN}${BG_BLUE}\] "\
 "\[${FG_WHITE}\]\w "\
 "\[${FMT_RESET}\]"\
 "\$(branch=\$(git symbolic-ref --quiet --short HEAD 2>/dev/null) && "\
-"printf '\[${FG_BLUE}${BG_MAGENTA}\] \[${FMT_BOLD}${FG_BLACK}\] %s \[${FG_MAGENTA}${BG_BLACK}${FMT_RESET}\]' \"\$branch\" || "\
+"printf '\[${FG_BLUE}${BG_MAGENTA}\] \[${FMT_BOLD}${FG_WHITE}\] %s \[${FG_MAGENTA}${BG_BLACK}${FMT_RESET}\]' \"\$branch\" || "\
 "printf '\[%s%s\]\[%s\]' \"$FG_BLUE\" \"$BG_BLACK\" \"$FMT_RESET\")"\
 "\n \[${FG_GREEN}\]╰ \[${FG_CYAN}\]\\\$ \[${FMT_RESET}\]"
 
