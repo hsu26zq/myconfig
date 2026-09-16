@@ -16,8 +16,6 @@
 :inoremap {<CR> {<CR>}<Esc>ko<tab>
 
 syntax on
-set termguicolors
-colo gruvbox
 
 let &t_SI = "\e[6 q"
 let &t_EI = "\e[2 q"
