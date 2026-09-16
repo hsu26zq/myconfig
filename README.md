@@ -19,7 +19,10 @@ source ~/.bashrc
 ## Layout
 
 - `common/alias` — shell aliases, sourced and live-reloaded every prompt
-- `common/profile` — prompt (PS1), history, and shell options, sourced once per shell
+- `common/profile` — plain default prompt (`user@host:path (branch)$`), history, and shell
+  options, sourced once per shell. Works anywhere, no font dependency.
+- `common/profile.looks` — the fancy colored/powerline prompt, only sourced (on top of
+  `profile`) when the `looks` scope is installed
 - `common/vimrc`, `common/tmux.conf` — symlinked to `~/.vimrc`, `~/.tmux.conf`
 - `work/gitconfig`, `work/ssh_config` — symlinked to `~/.gitconfig`, `~/.ssh/config`
 - `work/copy`, `work/flash` — scripts, made runnable anywhere via `PATH` (only when `work` scope is installed)
@@ -30,6 +33,8 @@ source ~/.bashrc
 Two optional extra scopes, split by what they actually give you:
 
 `looks` — cosmetic, no new capability, just nicer-looking output:
+- Swaps the prompt from the plain default to `common/profile.looks` (colored segments,
+  powerline triangles) via a local `.looks_enabled` marker (gitignored, not shared config)
 - JetBrainsMono Nerd Font, downloaded from its GitHub releases into `~/.local/share/fonts`
   (not vendored in this repo — binary, ~130MB). After installing, set it as your terminal
   emulator's font manually to see the icon/powerline glyphs — that part can't be scripted.

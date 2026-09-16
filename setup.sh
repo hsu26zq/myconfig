@@ -4,6 +4,7 @@ UTILS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMMON_DIR="$UTILS_DIR/common"
 WORK_DIR="$UTILS_DIR/work"
 WORK_MARKER="$UTILS_DIR/.work_enabled"
+LOOKS_MARKER="$UTILS_DIR/.looks_enabled"
 BASHRC="$HOME/.bashrc"
 SOURCE_LINE="source \"$UTILS_DIR/setup.sh\""
 
@@ -15,6 +16,10 @@ if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
 
     if [[ -f "$COMMON_DIR/profile" ]]; then
         source "$COMMON_DIR/profile"
+    fi
+
+    if [[ -f "$LOOKS_MARKER" && -f "$COMMON_DIR/profile.looks" ]]; then
+        source "$COMMON_DIR/profile.looks"
     fi
 
     _utils_reload_aliases() {
@@ -209,6 +214,8 @@ case "${1:-}" in
                     ;;
                 looks)
                     install_looks
+                    touch "$LOOKS_MARKER"
+                    echo "Looks scope enabled (fancy prompt active)."
                     ;;
                 tools)
                     install_tools
@@ -235,6 +242,8 @@ case "${1:-}" in
             done
             rm -f "$WORK_MARKER"
         fi
+
+        rm -f "$LOOKS_MARKER"
 
         echo "Uninstalled."
         echo "Open a new shell."
