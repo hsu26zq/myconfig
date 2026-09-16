@@ -10,9 +10,9 @@ Split into two scopes:
 ## Install
 
 ```bash
-./setup.sh install              # common/ only
-./setup.sh install work         # common/ + work/
-./setup.sh install work font    # + JetBrainsMono Nerd Font (downloaded, not vendored)
+./setup.sh install                    # common/ only
+./setup.sh install work               # common/ + work/
+./setup.sh install work font tools    # + Nerd Font + eza/bat/fzf (all downloaded, not vendored)
 source ~/.bashrc
 ```
 
@@ -31,6 +31,12 @@ source ~/.bashrc
 `~/.local/share/fonts` — not vendored in this repo (binary, ~130MB). Needs network access
 once, at install time. After installing, set it as your terminal emulator's font manually
 to see the icon/powerline glyphs — that part can't be scripted from here.
+
+`tools` downloads `eza`, `bat`, and `fzf` as user-local binaries — `eza`/`bat` into
+`~/.local/bin`, `fzf` cloned into `~/.fzf` via its official installer (key-bindings and
+completion, but not its own `~/.bashrc` hook, since `setup.sh` wires it in itself). No
+`sudo`, nothing outside `$HOME`. `common/alias` already has `command -v` checks that pick
+up `eza`/`bat` automatically once installed.
 
 ## Scripts
 

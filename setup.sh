@@ -10,6 +10,8 @@ SOURCE_LINE="source \"$UTILS_DIR/setup.sh\""
 if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
     export PATH="$COMMON_DIR:$PATH"
     [[ -f "$WORK_MARKER" ]] && export PATH="$WORK_DIR:$PATH"
+    [[ -d "$HOME/.fzf/bin" ]] && export PATH="$HOME/.fzf/bin:$PATH"
+    [[ -f "$HOME/.fzf.bash" ]] && source "$HOME/.fzf.bash"
 
     if [[ -f "$COMMON_DIR/profile" ]]; then
         source "$COMMON_DIR/profile"
@@ -111,6 +113,59 @@ install_font() {
     echo "Set it as your terminal emulator's font to see icons/powerline glyphs."
 }
 
+install_tools() {
+    mkdir -p "$HOME/.local/bin"
+
+    if command -v eza >/dev/null 2>&1; then
+        echo "eza already installed."
+    else
+        echo "Installing eza..."
+        local eza_url
+        eza_url=$(curl -fsSL https://api.github.com/repos/eza-community/eza/releases/latest \
+            | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
+            | cut -d'"' -f4)
+        if [[ -n "$eza_url" ]]; then
+            curl -fLo /tmp/eza.tar.gz "$eza_url" \
+                && tar -xzf /tmp/eza.tar.gz -C "$HOME/.local/bin" ./eza \
+                && chmod +x "$HOME/.local/bin/eza" \
+                && echo "Installed eza."
+            rm -f /tmp/eza.tar.gz
+        else
+            echo "Could not find an eza release asset."
+        fi
+    fi
+
+    if command -v bat >/dev/null 2>&1; then
+        echo "bat already installed."
+    else
+        echo "Installing bat..."
+        local bat_url bat_dir
+        bat_url=$(curl -fsSL https://api.github.com/repos/sharkdp/bat/releases/latest \
+            | grep -o '"browser_download_url": *"[^"]*x86_64-unknown-linux-gnu\.tar\.gz"' \
+            | cut -d'"' -f4)
+        if [[ -n "$bat_url" ]]; then
+            curl -fLo /tmp/bat.tar.gz "$bat_url"
+            bat_dir=$(tar -tzf /tmp/bat.tar.gz | head -1 | cut -d/ -f1)
+            tar -xzf /tmp/bat.tar.gz -C /tmp "$bat_dir/bat" \
+                && cp "/tmp/$bat_dir/bat" "$HOME/.local/bin/bat" \
+                && chmod +x "$HOME/.local/bin/bat" \
+                && echo "Installed bat."
+            rm -rf /tmp/bat.tar.gz "/tmp/$bat_dir"
+        else
+            echo "Could not find a bat release asset."
+        fi
+    fi
+
+    if [[ -d "$HOME/.fzf" ]]; then
+        echo "fzf already installed."
+    else
+        echo "Installing fzf..."
+        git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf" \
+            && "$HOME/.fzf/install" --key-bindings --completion --no-update-rc \
+            && echo "Installed fzf."
+    fi
+}
+
 case "${1:-}" in
     install)
         if grep -Fqx "$SOURCE_LINE" "$BASHRC" 2>/dev/null; then
@@ -135,6 +190,9 @@ case "${1:-}" in
                     ;;
                 font)
                     install_font
+                    ;;
+                tools)
+                    install_tools
                     ;;
             esac
         done
@@ -165,7 +223,7 @@ case "${1:-}" in
 
     *)
         echo "Usage:"
-        echo "  setup.sh install [work] [font]"
+        echo "  setup.sh install [work] [font] [tools]"
         echo "  setup.sh uninstall [work]"
         exit 1
         ;;
