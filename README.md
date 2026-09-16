@@ -2,22 +2,29 @@
 
 Personal dotfiles and scripts, bootstrapped onto any machine with `setup.sh`.
 
+Split into two scopes:
+
+- `common/` — universal, safe on any machine
+- `work/` — company-specific (work email, internal IPs, board/kernel scripts)
+
 ## Install
 
 ```bash
-./setup.sh install
+./setup.sh install         # common/ only
+./setup.sh install work    # common/ + work/
 source ~/.bashrc
 ```
 
 ## Layout
 
-- `alias` — shell aliases, sourced and live-reloaded every prompt
-- `profile` — prompt (PS1), history, and shell options, sourced once per shell
-- `vimrc`, `tmux.conf`, `gitconfig` — symlinked to `~/.vimrc`, `~/.tmux.conf`, `~/.gitconfig`
-- `copy`, `flash` — scripts, made runnable anywhere via `PATH`
+- `common/alias` — shell aliases, sourced and live-reloaded every prompt
+- `common/profile` — prompt (PS1), history, and shell options, sourced once per shell
+- `common/vimrc`, `common/tmux.conf` — symlinked to `~/.vimrc`, `~/.tmux.conf`
+- `work/gitconfig`, `work/ssh_config` — symlinked to `~/.gitconfig`, `~/.ssh/config`
+- `work/copy`, `work/flash` — scripts, made runnable anywhere via `PATH` (only when `work` scope is installed)
 
 `setup.sh install` backs up any pre-existing config it would overwrite as `<file>.bak`.
-`setup.sh uninstall` removes the bashrc hook and symlinks, restoring backups if present.
+`setup.sh uninstall [work]` removes the bashrc hook and symlinks, restoring backups if present.
 
 ## Scripts
 

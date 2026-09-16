@@ -1,14 +1,18 @@
 #!/bin/bash
 
 UTILS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMMON_DIR="$UTILS_DIR/common"
+WORK_DIR="$UTILS_DIR/work"
+WORK_MARKER="$UTILS_DIR/.work_enabled"
 BASHRC="$HOME/.bashrc"
 SOURCE_LINE="source \"$UTILS_DIR/setup.sh\""
 
 if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
-    export PATH="$UTILS_DIR:$PATH"
+    export PATH="$COMMON_DIR:$PATH"
+    [[ -f "$WORK_MARKER" ]] && export PATH="$WORK_DIR:$PATH"
 
-    if [[ -f "$UTILS_DIR/profile" ]]; then
-        source "$UTILS_DIR/profile"
+    if [[ -f "$COMMON_DIR/profile" ]]; then
+        source "$COMMON_DIR/profile"
     fi
 
     _utils_reload_aliases() {
@@ -20,13 +24,13 @@ if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
 
         _UTILS_ALIAS_NAMES=""
 
-        if [[ -f "$UTILS_DIR/alias" ]]; then
+        if [[ -f "$COMMON_DIR/alias" ]]; then
             _UTILS_ALIAS_NAMES=$(
                 sed -n "s/^[[:space:]]*\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p" \
-                    "$UTILS_DIR/alias"
+                    "$COMMON_DIR/alias"
             )
 
-            source "$UTILS_DIR/alias"
+            source "$COMMON_DIR/alias"
         fi
     }
 
@@ -42,11 +46,14 @@ if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
     return
 fi
 
-LINKS=(
-    "vimrc:$HOME/.vimrc"
-    "tmux.conf:$HOME/.tmux.conf"
-    "gitconfig:$HOME/.gitconfig"
-    "ssh_config:$HOME/.ssh/config"
+COMMON_LINKS=(
+    "common/vimrc:$HOME/.vimrc"
+    "common/tmux.conf:$HOME/.tmux.conf"
+)
+
+WORK_LINKS=(
+    "work/gitconfig:$HOME/.gitconfig"
+    "work/ssh_config:$HOME/.ssh/config"
 )
 
 link_config() {
@@ -92,9 +99,17 @@ case "${1:-}" in
             echo "Installed bashrc hook."
         fi
 
-        for entry in "${LINKS[@]}"; do
+        for entry in "${COMMON_LINKS[@]}"; do
             link_config "${entry%%:*}" "${entry#*:}"
         done
+
+        if [[ "${2:-}" == "work" ]]; then
+            for entry in "${WORK_LINKS[@]}"; do
+                link_config "${entry%%:*}" "${entry#*:}"
+            done
+            touch "$WORK_MARKER"
+            echo "Work scope enabled."
+        fi
 
         echo "Run: source ~/.bashrc"
         ;;
@@ -105,9 +120,16 @@ case "${1:-}" in
             mv "$BASHRC.tmp" "$BASHRC"
         fi
 
-        for entry in "${LINKS[@]}"; do
+        for entry in "${COMMON_LINKS[@]}"; do
             unlink_config "${entry#*:}"
         done
+
+        if [[ -f "$WORK_MARKER" || "${2:-}" == "work" ]]; then
+            for entry in "${WORK_LINKS[@]}"; do
+                unlink_config "${entry#*:}"
+            done
+            rm -f "$WORK_MARKER"
+        fi
 
         echo "Uninstalled."
         echo "Open a new shell."
@@ -115,8 +137,8 @@ case "${1:-}" in
 
     *)
         echo "Usage:"
-        echo "  setup.sh install"
-        echo "  setup.sh uninstall"
+        echo "  setup.sh install [work]"
+        echo "  setup.sh uninstall [work]"
         exit 1
         ;;
 esac
