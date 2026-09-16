@@ -14,7 +14,7 @@ BG_MAGENTA="\e[45m"
 BG_BLACK="\e[40m"
 
 PS1=\
-"\n\[${FMT_BOLD}${BG_GREEN}\] \[${FG_RED}\] \[${FG_WHITE}\]\u "\
+"\n\[${FMT_BOLD}${BG_GREEN}\] \[${FG_RED}\] \[${FG_WHITE}\]\u@\h "\
 "\[${FG_GREEN}${BG_BLUE}\] "\
 "\[${FG_WHITE}\]\w "\
 "\[${FMT_RESET}\]"\
