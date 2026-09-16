@@ -3,4 +3,4 @@
 - [x] `gitconfig` — moved in and symlinked via setup.sh
 - [x] `.gitignore` — stop stray secrets/`.bak` files from being committed
 - [x] `README.md`
-- [ ] `ssh_config` — blocked: moving `~/.ssh/config` was denied by the permission classifier as a sensitive action. Needs the user to do it manually or explicitly approve it.
+- [x] `ssh_config` — moved in and symlinked via setup.sh; added `buildhost`/`board` aliases for the IPs hardcoded in `flash`/`copy`

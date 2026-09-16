@@ -46,10 +46,13 @@ LINKS=(
     "vimrc:$HOME/.vimrc"
     "tmux.conf:$HOME/.tmux.conf"
     "gitconfig:$HOME/.gitconfig"
+    "ssh_config:$HOME/.ssh/config"
 )
 
 link_config() {
     local target="$UTILS_DIR/$1" link_path="$2"
+
+    mkdir -p "$(dirname "$link_path")"
 
     if [[ -L "$link_path" ]]; then
         ln -sfn "$target" "$link_path"
