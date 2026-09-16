@@ -1,5 +1,6 @@
-- [ ] `profile` — PS1/prompt + shell options/exports, sourced once by setup.sh
-- [ ] `eza`/`bat` aliases in `alias` — with existence checks so they don't break on a machine without them installed
-- [ ] `.gitconfig` — git aliases, user name/email, default editor
-- [ ] `~/.ssh/config` — named hosts for board/build IPs used in `flash`/`copy` (192.168.1.1, 10.20.31.127)
-- [ ] `.gitignore` — stop stray secrets/`.bak` files from being committed
+- [x] `profile` — PS1/prompt + shell options/exports, sourced once by setup.sh
+- [x] `eza`/`bat` aliases in `alias` — with existence checks
+- [x] `gitconfig` — moved in and symlinked via setup.sh
+- [x] `.gitignore` — stop stray secrets/`.bak` files from being committed
+- [x] `README.md`
+- [ ] `ssh_config` — blocked: moving `~/.ssh/config` was denied by the permission classifier as a sensitive action. Needs the user to do it manually or explicitly approve it.

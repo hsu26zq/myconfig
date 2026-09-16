@@ -7,6 +7,10 @@ SOURCE_LINE="source \"$UTILS_DIR/setup.sh\""
 if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
     export PATH="$UTILS_DIR:$PATH"
 
+    if [[ -f "$UTILS_DIR/profile" ]]; then
+        source "$UTILS_DIR/profile"
+    fi
+
     _utils_reload_aliases() {
         if [[ -n "${_UTILS_ALIAS_NAMES:-}" ]]; then
             for name in $_UTILS_ALIAS_NAMES; do
@@ -41,6 +45,7 @@ fi
 LINKS=(
     "vimrc:$HOME/.vimrc"
     "tmux.conf:$HOME/.tmux.conf"
+    "gitconfig:$HOME/.gitconfig"
 )
 
 link_config() {
