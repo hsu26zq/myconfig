@@ -23,7 +23,16 @@ source ~/.bashrc
   options, sourced once per shell. Works anywhere, no font dependency.
 - `common/profile.looks` — the fancy colored/powerline prompt, only sourced (on top of
   `profile`) when the `looks` scope is installed
-- `common/vimrc`, `common/tmux.conf` — symlinked to `~/.vimrc`, `~/.tmux.conf`
+- `common/vimrc` — symlinked to `~/.vimrc`
+- `common/tmux.conf.local` — our override layer on top of
+  [gpakosz/.tmux](https://github.com/gpakosz/.tmux) (cloned fresh into `~/.tmux` at install
+  time, not vendored — same reasoning as the font/eza/bat downloads), symlinked to
+  `~/.tmux.conf.local`. `~/.tmux.conf` itself is symlinked straight to the upstream
+  `~/.tmux/.tmux.conf` — never edit that file directly, put changes in
+  `common/tmux.conf.local` instead so a future `git pull` inside `~/.tmux` doesn't clobber
+  them. Currently just enables mouse mode and a bigger history; everything else is
+  gpakosz's stock defaults (both `Ctrl+b` and `Ctrl+a` work as prefix, `h`/`j`/`k`/`l` for
+  pane nav, `-`/`_` for splits) — add more overrides here as you get familiar with it.
 - `work/gitconfig`, `work/ssh_config` — symlinked to `~/.gitconfig`, `~/.ssh/config`
 - `work/copy`, `work/flash` — scripts, made runnable anywhere via `PATH` (only when `work` scope is installed)
 

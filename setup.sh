@@ -55,7 +55,7 @@ fi
 
 COMMON_LINKS=(
     "common/vimrc:$HOME/.vimrc"
-    "common/tmux.conf:$HOME/.tmux.conf"
+    "common/tmux.conf.local:$HOME/.tmux.conf.local"
 )
 
 WORK_LINKS=(
@@ -64,7 +64,8 @@ WORK_LINKS=(
 )
 
 link_config() {
-    local target="$UTILS_DIR/$1" link_path="$2"
+    local target="$1" link_path="$2"
+    [[ "$target" != /* ]] && target="$UTILS_DIR/$target"
 
     mkdir -p "$(dirname "$link_path")"
 
@@ -95,6 +96,15 @@ unlink_config() {
             echo "Removed $link_path"
         fi
     fi
+}
+
+install_gpakosz_tmux() {
+    if [[ ! -d "$HOME/.tmux" ]]; then
+        echo "Cloning gpakosz/.tmux..."
+        git clone --depth 1 https://github.com/gpakosz/.tmux.git "$HOME/.tmux" \
+            || { echo "Clone failed."; return 1; }
+    fi
+    link_config "$HOME/.tmux/.tmux.conf" "$HOME/.tmux.conf"
 }
 
 install_font() {
@@ -199,6 +209,8 @@ case "${1:-}" in
             echo "Installed bashrc hook."
         fi
 
+        install_gpakosz_tmux
+
         for entry in "${COMMON_LINKS[@]}"; do
             link_config "${entry%%:*}" "${entry#*:}"
         done
@@ -235,6 +247,8 @@ case "${1:-}" in
         for entry in "${COMMON_LINKS[@]}"; do
             unlink_config "${entry#*:}"
         done
+
+        unlink_config "$HOME/.tmux.conf"
 
         if [[ -f "$WORK_MARKER" ]] || [[ " ${*:2} " == *" work "* ]]; then
             for entry in "${WORK_LINKS[@]}"; do
