@@ -90,6 +90,27 @@ unlink_config() {
     fi
 }
 
+install_font() {
+    local name="JetBrainsMono Nerd Font"
+    local url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+    local dest="$HOME/.local/share/fonts"
+    local tmp_zip="/tmp/jetbrainsmono-nerd-font.zip"
+
+    if fc-list 2>/dev/null | grep -qi "JetBrainsMono Nerd Font"; then
+        echo "$name already installed."
+        return
+    fi
+
+    mkdir -p "$dest"
+    echo "Downloading $name..."
+    curl -fLo "$tmp_zip" "$url" || { echo "Download failed."; return 1; }
+    unzip -oq "$tmp_zip" -d "$dest"
+    rm -f "$tmp_zip"
+    fc-cache -f "$dest" >/dev/null
+    echo "Installed $name to $dest"
+    echo "Set it as your terminal emulator's font to see icons/powerline glyphs."
+}
+
 case "${1:-}" in
     install)
         if grep -Fqx "$SOURCE_LINE" "$BASHRC" 2>/dev/null; then
@@ -103,13 +124,20 @@ case "${1:-}" in
             link_config "${entry%%:*}" "${entry#*:}"
         done
 
-        if [[ "${2:-}" == "work" ]]; then
-            for entry in "${WORK_LINKS[@]}"; do
-                link_config "${entry%%:*}" "${entry#*:}"
-            done
-            touch "$WORK_MARKER"
-            echo "Work scope enabled."
-        fi
+        for scope in "${@:2}"; do
+            case "$scope" in
+                work)
+                    for entry in "${WORK_LINKS[@]}"; do
+                        link_config "${entry%%:*}" "${entry#*:}"
+                    done
+                    touch "$WORK_MARKER"
+                    echo "Work scope enabled."
+                    ;;
+                font)
+                    install_font
+                    ;;
+            esac
+        done
 
         echo "Run: source ~/.bashrc"
         ;;
@@ -124,7 +152,7 @@ case "${1:-}" in
             unlink_config "${entry#*:}"
         done
 
-        if [[ -f "$WORK_MARKER" || "${2:-}" == "work" ]]; then
+        if [[ -f "$WORK_MARKER" ]] || [[ " ${*:2} " == *" work "* ]]; then
             for entry in "${WORK_LINKS[@]}"; do
                 unlink_config "${entry#*:}"
             done
@@ -137,7 +165,7 @@ case "${1:-}" in
 
     *)
         echo "Usage:"
-        echo "  setup.sh install [work]"
+        echo "  setup.sh install [work] [font]"
         echo "  setup.sh uninstall [work]"
         exit 1
         ;;

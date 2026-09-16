@@ -10,8 +10,9 @@ Split into two scopes:
 ## Install
 
 ```bash
-./setup.sh install         # common/ only
-./setup.sh install work    # common/ + work/
+./setup.sh install              # common/ only
+./setup.sh install work         # common/ + work/
+./setup.sh install work font    # + JetBrainsMono Nerd Font (downloaded, not vendored)
 source ~/.bashrc
 ```
 
@@ -25,6 +26,11 @@ source ~/.bashrc
 
 `setup.sh install` backs up any pre-existing config it would overwrite as `<file>.bak`.
 `setup.sh uninstall [work]` removes the bashrc hook and symlinks, restoring backups if present.
+
+`font` downloads JetBrainsMono Nerd Font from its GitHub releases and installs it to
+`~/.local/share/fonts` — not vendored in this repo (binary, ~130MB). Needs network access
+once, at install time. After installing, set it as your terminal emulator's font manually
+to see the icon/powerline glyphs — that part can't be scripted from here.
 
 ## Scripts
 
