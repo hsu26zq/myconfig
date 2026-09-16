@@ -29,7 +29,7 @@ PS1=\
 "\$(branch=\$(git symbolic-ref --quiet --short HEAD 2>/dev/null) && "\
 "printf '\[${FG_ORANGE}${BG_RED}\]${SEP}\[${FMT_RESET}\]\[${BG_RED}\] \[${FG_WHITE}\]%s \[${FMT_RESET}\]\[${FG_RED}\]${SEP}\[${FMT_RESET}\]' \"\$branch\" || "\
 "printf '\[${FG_ORANGE}\]${SEP}\[${FMT_RESET}\]')"\
-"\n \[${FG_GREEN}\]╰ \[${FG_CYAN}\]\\\$ \[${FMT_RESET}\]"
+"\n \[${FG_CYAN}\]❯ \[${FMT_RESET}\]"
 
 HISTSIZE=5000
 HISTFILESIZE=10000
