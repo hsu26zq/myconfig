@@ -7,10 +7,10 @@ glo='git log --oneline'
 
 if command -v eza >/dev/null 2>&1; then
     alias \
-    ls='eza --icons' \
-    ll='eza -la --icons' \
-    la='eza -a --icons' \
-    tree='eza --tree --icons'
+    ls='eza' \
+    ll='eza -la' \
+    la='eza -a' \
+    tree='eza --tree'
 fi
 
 if command -v bat >/dev/null 2>&1; then
