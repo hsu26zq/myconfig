@@ -3,6 +3,7 @@ set -euo pipefail
 
 SRC="${1:-}"
 DST="${2:-.}"
+SRC="${SRC%/}"
 
 if [[ -z "$SRC" ]]; then
     echo "Usage: copy SOURCE DEST"
