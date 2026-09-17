@@ -229,6 +229,11 @@ GRAPH_ALIAS="log --graph --decorate --all --date=short --pretty=format:'%C(yello
 # machine or not. Backed up the same way as identity, so uninstall
 # restores rather than destroys any pre-existing value.
 setup_git_defaults() {
+    if ! command -v git >/dev/null 2>&1; then
+        echo "  git defaults: skipped (git not installed)"
+        return
+    fi
+
     if [[ ! -f "$GIT_DEFAULTS_BACKUP" ]]; then
         {
             printf 'ALIAS_GRAPH_BAK=%q\n' "$(git config --global alias.graph 2>/dev/null || true)"
@@ -251,6 +256,10 @@ setup_git_defaults() {
 }
 
 teardown_git_defaults() {
+    if ! command -v git >/dev/null 2>&1; then
+        return
+    fi
+
     if [[ -f "$GIT_DEFAULTS_BACKUP" ]]; then
         # shellcheck disable=SC1090
         source "$GIT_DEFAULTS_BACKUP"
@@ -297,18 +306,22 @@ setup_identity() {
     set +a
 
     if [[ -n "${GIT_EMAIL:-}" || -n "${GIT_NAME:-}" ]]; then
-        if [[ ! -f "$GIT_BACKUP_FILE" ]]; then
-            local prev_email prev_name
-            prev_email="$(git config --global user.email 2>/dev/null || true)"
-            prev_name="$(git config --global user.name 2>/dev/null || true)"
-            {
-                printf 'GIT_EMAIL_BAK=%q\n' "$prev_email"
-                printf 'GIT_NAME_BAK=%q\n' "$prev_name"
-            } > "$GIT_BACKUP_FILE"
+        if ! command -v git >/dev/null 2>&1; then
+            echo "  git identity: skipped (git not installed)"
+        else
+            if [[ ! -f "$GIT_BACKUP_FILE" ]]; then
+                local prev_email prev_name
+                prev_email="$(git config --global user.email 2>/dev/null || true)"
+                prev_name="$(git config --global user.name 2>/dev/null || true)"
+                {
+                    printf 'GIT_EMAIL_BAK=%q\n' "$prev_email"
+                    printf 'GIT_NAME_BAK=%q\n' "$prev_name"
+                } > "$GIT_BACKUP_FILE"
+            fi
+            [[ -n "${GIT_EMAIL:-}" ]] && git config --global user.email "$GIT_EMAIL"
+            [[ -n "${GIT_NAME:-}" ]] && git config --global user.name "$GIT_NAME"
+            echo "  git identity configured"
         fi
-        [[ -n "${GIT_EMAIL:-}" ]] && git config --global user.email "$GIT_EMAIL"
-        [[ -n "${GIT_NAME:-}" ]] && git config --global user.name "$GIT_NAME"
-        echo "  git identity configured"
     fi
 
     mkdir -p "$HOME/.ssh/config.d"
@@ -341,7 +354,7 @@ setup_identity() {
 }
 
 teardown_identity() {
-    if [[ -f "$GIT_BACKUP_FILE" ]]; then
+    if [[ -f "$GIT_BACKUP_FILE" ]] && command -v git >/dev/null 2>&1; then
         # shellcheck disable=SC1090
         source "$GIT_BACKUP_FILE"
         if [[ -n "${GIT_EMAIL_BAK:-}" ]]; then
