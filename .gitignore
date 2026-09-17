@@ -3,3 +3,4 @@
 *.log
 identity.env
 .git_identity.bak
+.git_defaults.bak

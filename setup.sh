@@ -5,6 +5,7 @@ BASHRC="$HOME/.bashrc"
 SOURCE_LINE="source \"$REPO_DIR/setup.sh\""
 IDENTITY_FILE="$REPO_DIR/identity.env"
 GIT_BACKUP_FILE="$REPO_DIR/.git_identity.bak"
+GIT_DEFAULTS_BACKUP="$REPO_DIR/.git_defaults.bak"
 SSH_FRAGMENT="$HOME/.ssh/config.d/myconfig"
 SSH_INCLUDE_LINE="Include ~/.ssh/config.d/*"
 
@@ -222,6 +223,67 @@ install_fzf() {
     fi
 }
 
+GRAPH_ALIAS="log --graph --decorate --all --date=short --pretty=format:'%C(yellow)%h%Creset %C(cyan)%ad%Creset %C(green)%an%Creset%C(auto)%d%Creset %s'"
+
+# General git preferences, not identity - applied unconditionally, same
+# machine or not. Backed up the same way as identity, so uninstall
+# restores rather than destroys any pre-existing value.
+setup_git_defaults() {
+    if [[ ! -f "$GIT_DEFAULTS_BACKUP" ]]; then
+        {
+            printf 'ALIAS_GRAPH_BAK=%q\n' "$(git config --global alias.graph 2>/dev/null || true)"
+            printf 'SAFE_DIR_BAK=%q\n' "$(git config --global safe.directory 2>/dev/null || true)"
+            printf 'CRED_GH_BAK=%q\n' "$(git config --global credential.https://github.com.helper 2>/dev/null || true)"
+            printf 'CRED_GIST_BAK=%q\n' "$(git config --global credential.https://gist.github.com.helper 2>/dev/null || true)"
+        } > "$GIT_DEFAULTS_BACKUP"
+    fi
+
+    git config --global alias.graph "$GRAPH_ALIAS"
+    git config --global safe.directory '*'
+
+    if command -v gh >/dev/null 2>&1; then
+        git config --global credential.https://github.com.helper '!gh auth git-credential'
+        git config --global credential.https://gist.github.com.helper '!gh auth git-credential'
+        echo "  git defaults configured (graph alias, safe.directory, gh credential helper)"
+    else
+        echo "  git defaults configured (graph alias, safe.directory)"
+    fi
+}
+
+teardown_git_defaults() {
+    if [[ -f "$GIT_DEFAULTS_BACKUP" ]]; then
+        # shellcheck disable=SC1090
+        source "$GIT_DEFAULTS_BACKUP"
+
+        if [[ -n "${ALIAS_GRAPH_BAK:-}" ]]; then
+            git config --global alias.graph "$ALIAS_GRAPH_BAK"
+        else
+            git config --global --unset alias.graph 2>/dev/null || true
+        fi
+
+        if [[ -n "${SAFE_DIR_BAK:-}" ]]; then
+            git config --global safe.directory "$SAFE_DIR_BAK"
+        else
+            git config --global --unset safe.directory 2>/dev/null || true
+        fi
+
+        if [[ -n "${CRED_GH_BAK:-}" ]]; then
+            git config --global credential.https://github.com.helper "$CRED_GH_BAK"
+        else
+            git config --global --unset credential.https://github.com.helper 2>/dev/null || true
+        fi
+
+        if [[ -n "${CRED_GIST_BAK:-}" ]]; then
+            git config --global credential.https://gist.github.com.helper "$CRED_GIST_BAK"
+        else
+            git config --global --unset credential.https://gist.github.com.helper 2>/dev/null || true
+        fi
+
+        rm -f "$GIT_DEFAULTS_BACKUP"
+        echo "  git defaults restored"
+    fi
+}
+
 setup_identity() {
     if [[ ! -f "$IDENTITY_FILE" ]]; then
         echo "No identity.env - skipping git/ssh identity setup."
@@ -341,6 +403,7 @@ case "${1:-}" in
         install_jq
         install_fzf
 
+        setup_git_defaults
         setup_identity
 
         echo "Done. Run: source ~/.bashrc"
@@ -364,6 +427,7 @@ case "${1:-}" in
         fc-cache -f "$HOME/.local/share/fonts" >/dev/null 2>&1 || true
 
         teardown_identity
+        teardown_git_defaults
 
         echo "Uninstalled."
         echo "Open a new shell."
