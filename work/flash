@@ -1,0 +1,73 @@
+#!/bin/bash
+set -e
+
+find_dev() {
+    lsblk -dpno NAME,RM,TYPE |
+        awk '$2==1 && $3=="disk" && $1 ~ /^\/dev\/sd/{print $1; exit}'
+}
+
+find_image() {
+    find . -maxdepth 1 -type f \
+        \( -name "*.img" -o -name "*.wic" \
+        -o -name "*.img.xz" -o -name "*.wic.xz" \
+        -o -name "*.img.zst" -o -name "*.wic.zst" \
+        -o -name "*.img.bz2" -o -name "*.wic.bz2" \) \
+        | head -n1
+}
+
+IMAGE=""
+DEV=""
+MODE="bmap"
+
+for arg in "$@"; do
+    if [[ "$arg" == "raw" ]]; then
+        MODE="dd"
+    elif [[ "$arg" =~ ^sd[a-z]$ ]]; then
+        DEV="/dev/$arg"
+    else
+        IMAGE="$arg"
+    fi
+done
+
+[ -n "$IMAGE" ] || IMAGE=$(find_image)
+[ -n "$DEV" ] || DEV=$(find_dev)
+
+[ -n "$IMAGE" ] || {
+    echo "No image found"
+    exit 1
+}
+
+[ -b "$DEV" ] || {
+    echo "Invalid device: $DEV"
+    exit 1
+}
+
+echo "Flashing $IMAGE -> $DEV using $MODE"
+
+sudo umount "${DEV}"?* 2>/dev/null || true
+sync
+
+if [[ "$MODE" == "dd" ]]; then
+    case "$IMAGE" in
+        *.xz)
+            xzcat "$IMAGE" |
+                sudo dd of="$DEV" bs=4M status=progress conv=fsync
+            ;;
+        *.zst)
+            zstdcat "$IMAGE" |
+                sudo dd of="$DEV" bs=4M status=progress conv=fsync
+            ;;
+        *.bz2)
+            bzcat "$IMAGE" |
+                sudo dd of="$DEV" bs=4M status=progress conv=fsync
+            ;;
+        *)
+            sudo dd if="$IMAGE" of="$DEV" bs=4M status=progress conv=fsync
+            ;;
+    esac
+else
+    sudo bmaptool copy "$IMAGE" "$DEV"
+fi
+
+sync
+echo "Done. Safe to remove $DEV"

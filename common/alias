@@ -1,0 +1,23 @@
+alias \
+ll='ls -alF' \
+la='ls -A' \
+gr='git remote' \
+gb='git branch' \
+glo='git log --oneline'
+
+if command -v eza >/dev/null 2>&1; then
+    alias \
+    ls='eza' \
+    ll='eza -la' \
+    la='eza -a' \
+    tree='eza --tree'
+fi
+
+if command -v bat >/dev/null 2>&1; then
+    alias \
+    cat='bat'
+elif command -v batcat >/dev/null 2>&1; then
+    alias \
+    cat='batcat'
+fi
+
