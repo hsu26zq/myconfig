@@ -1,7 +1,0 @@
-Host buildhost 10.20.31.127
-  HostName 10.20.31.127
-  User tommy
-
-Host board
-  HostName 192.168.1.1
-  User root

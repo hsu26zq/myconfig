@@ -1,94 +1,101 @@
-# utils
+# myconfig
 
-Personal dotfiles and scripts, bootstrapped onto any machine with `setup.sh`.
-
-Split into two scopes:
-
-- `common/` — universal, safe on any machine
-- `work/` — company-specific (work email, internal IPs, board/kernel scripts)
-
-## Install
+Personal dotfiles and scripts. One flat repo, one command to set up, works
+anywhere from a bare embedded board to a full desktop.
 
 ```bash
-./setup.sh install                     # common/ only
-./setup.sh install work                # common/ + work/
-./setup.sh install work looks tools    # + cosmetic (looks) and functional (tools) extras
+git clone https://github.com/hsu26zq/myconfig.git
+cd myconfig
+./setup.sh install
 source ~/.bashrc
 ```
 
+No `git`? Download it as a tarball instead:
+
+```bash
+curl -L https://github.com/hsu26zq/myconfig/archive/refs/heads/main.tar.gz | tar xz
+cd myconfig-main
+./setup.sh install
+source ~/.bashrc
+```
+
+`./setup.sh uninstall` fully reverses everything below - every symlink,
+every downloaded binary, and git/ssh identity changes (restoring whatever
+was there before, not just deleting it). Install-then-uninstall leaves the
+machine exactly as it was.
+
+## Design
+
+- **One command, no flags.** `install`/`uninstall` always attempt
+  everything. There's no "scope" to remember.
+- **Best-effort, never all-or-nothing.** Each tool install is independent -
+  no network, wrong architecture, or no matching release asset just skips
+  that one tool with a message and keeps going. Dotfiles/prompt always
+  succeed regardless, since they don't need network access.
+- **Architecture-aware.** Detects `x86_64` vs `aarch64` (`uname -m`) and
+  downloads the matching build for each tool.
+- **Everything user-local.** Every file this touches lives under `$HOME`
+  (mostly `~/.local/bin`) - no `sudo`, nothing system-wide.
+- **No git dependency for any tool install.** Everything is a direct binary
+  download, so this works even on a machine with no `git` at all (the
+  reason to have `git` is just to clone this repo in the first place - the
+  no-git tarball method above works around even that).
+
 ## Layout
 
-- `common/alias` — shell aliases, sourced and live-reloaded every prompt
-- `common/profile` — plain default prompt (`user@host:path (branch)$`), history, and shell
-  options, sourced once per shell. Works anywhere, no font dependency.
-- `common/profile.looks` — initializes starship (`eval "$(starship init bash)"`), only
-  sourced (on top of `profile`) when the `looks` scope is installed
-- `common/starship.toml` — symlinked to `~/.config/starship.toml` when `looks` is
-  installed. Recreates the red-to-orange gradient/powerline look (user -> host -> dir ->
-  time -> git branch) previously hand-rolled in bash escape codes, now via starship's
-  config instead — same visual design, cross-shell (works if you ever use zsh/fish/
-  PowerShell too, not just bash)
-- `common/vimrc` — symlinked to `~/.vimrc`
-- `work/gitconfig`, `work/ssh_config` — symlinked to `~/.gitconfig`, `~/.ssh/config`
-- `work/copy`, `work/flash` — scripts, made runnable anywhere via `PATH` (only when `work` scope is installed)
+```
+myconfig/
+├── setup.sh
+├── alias, profile, vimrc, starship.toml   # dotfiles, always symlinked/sourced
+├── copy, flash                            # scripts, always on PATH
+├── identity.env.example                   # tracked template
+└── identity.env                           # LOCAL ONLY, gitignored, you create this
+```
 
-No tmux config lives in this repo — it isn't managed here at all. `zellij` (terminal
-multiplexer) is installed as a plain user-local binary into `~/.local/bin` on every
-`install`, same download-not-vendor approach as everything else below. No config file is
-tracked for it yet (stock defaults); add `common/zellij_config.kdl`, symlinked to
-`~/.config/zellij/config.kdl`, once there are actual overrides worth keeping.
+- `profile` sets up history/shell options and the prompt: `starship` if it
+  installed successfully, a plain fallback prompt (still shows git branch)
+  if not - so a bare board with no network still gets a working shell.
+- `copy SOURCE DEST` - plain generic copy. Either side can be local or
+  `user@host:/path`, either can be a file or directory, trailing slash
+  never changes behavior (the source always lands under DEST). No presets,
+  no hardcoded hosts.
+- `flash [raw] [device] [image]` - flashes an image to a removable device,
+  auto-detecting the image/device if not given.
 
-`setup.sh install` backs up any pre-existing config it would overwrite as `<file>.bak`.
+## `identity.env` (git/SSH identity)
 
-`setup.sh uninstall` is a **full, unconditional teardown** — no scope flags needed. It
-removes everything this repo has ever installed: all symlinks (restoring `.bak` backups if
-present) and every downloaded binary/font listed below (deleting the actual files, not
-just config wiring). Install-then-uninstall leaves nothing behind. Re-run
-`install [work] [looks] [tools]` afterward to set it back up.
+This repo never contains your actual git email or internal host IPs -
+that data lives in `identity.env`, which is gitignored and lives only on
+each machine you create it on:
 
-Two optional extra scopes for `install` only (`uninstall` always removes everything
-regardless), split by what they actually give you:
+```bash
+cp identity.env.example identity.env
+nano identity.env
+./setup.sh install
+```
 
-`looks` — cosmetic, no new capability, just nicer-looking output:
-- Swaps the prompt from the plain default to starship (via `.looks_enabled`, a local
-  marker file, gitignored, not shared config)
-- JetBrainsMono Nerd Font, downloaded from its GitHub releases into `~/.local/share/fonts`
-  (not vendored in this repo — binary, ~130MB). After installing, set it as your terminal
-  emulator's font manually to see the icon/powerline glyphs — that part can't be scripted.
-- `eza`, `bat` — colorized `ls`/`cat` replacements
-- `delta` — syntax-highlighted git diffs (not wired into `work/gitconfig` automatically,
-  since `looks` and `work` are independent scopes — add `core.pager = delta` yourself if
-  you install both)
-- `btop` — nicer `top`/`htop` replacement
-- `starship` — cross-shell prompt tool, config in `common/starship.toml`
+Recognized keys (all optional - a machine with no `identity.env`, or one
+missing some keys, just skips whatever it doesn't have):
 
-`tools` — functional, changes what you can actually do:
-- `fzf` — fuzzy history/file search (`Ctrl+R`/`Ctrl+T`), genuinely different from bash's
-  built-in reverse-search, not just a visual upgrade. Cloned into `~/.fzf` via its official
-  installer (key-bindings and completion, but not its own `~/.bashrc` hook, since
-  `setup.sh` wires it in itself)
-- `ripgrep` (`rg`) — much faster `grep`, respects `.gitignore`
-- `fd` — faster, friendlier `find`
-- `zoxide` — a `cd` that learns your frequently-used directories (`z <partial-name>` to
-  jump); shell integration self-detects via `command -v zoxide`, no marker needed
-- `jq` — JSON processor/query tool
-- `lazygit` — terminal UI for git
+- `GIT_EMAIL`, `GIT_NAME` - applied via `git config --global`. Whatever was
+  already configured is backed up first and restored on `uninstall` - your
+  own prior identity is never lost, only ever set aside.
+- `BUILDHOST_IP`, `BUILDHOST_USER`, `BOARD_IP`, `BOARD_USER` - generates
+  SSH `Host buildhost` / `Host board` entries (in `~/.ssh/config.d/`,
+  included from `~/.ssh/config` via one added `Include` line), so
+  `ssh buildhost` / `copy board:/path .` work without typing IPs.
 
-All `eza`/`bat`/`delta`/`btop`/`fzf`/`ripgrep`/`fd`/`zoxide`/`jq`/`lazygit`/`starship`/
-`zellij` binaries install entirely under `$HOME` (mostly `~/.local/bin`) — no `sudo`,
-nothing system-wide. Need network access once, at install time. `ncdu` was considered but
-skipped — it isn't distributed as a prebuilt GitHub-release binary, so it doesn't fit this
-no-sudo/no-vendoring pattern.
+**Values with spaces must be quoted** (`GIT_NAME="Your Name"`) -
+`identity.env` is read as shell code, and an unquoted space breaks it.
 
-## Scripts
+## Tools installed
 
-### `copy`
+Cosmetic (nicer output, no new capability): JetBrainsMono Nerd Font
+(set it as your terminal's font manually - that part can't be scripted),
+`eza`, `bat`, `delta`, `btop`, `starship`.
 
-Copies a file/dir between local and remote paths (`user@host:/path` syntax), or use a preset:
+Functional (new capability): `fzf` (fuzzy `Ctrl+R`/`Ctrl+T` search),
+`ripgrep` (`rg`), `fd`, `zoxide` (`z`), `jq`, `lazygit`, `zellij`.
 
-- `rkernel` / `rmodule` / `rdt` — push kernel image / modules / device-tree overlay from the build host to the board
-- `lkernel` / `lmodule` / `ldt` — pull the same from the build host to this machine
-
-### `flash`
-
-Flashes an image (`.img`/`.wic`, optionally compressed) to a removable device. Auto-detects the image in the current directory and the target device if not given. Defaults to `bmaptool`; pass `raw` to use `dd` instead.
+`ncdu` was considered but isn't distributed as a prebuilt binary release,
+so it doesn't fit this repo's no-sudo/no-vendoring approach.

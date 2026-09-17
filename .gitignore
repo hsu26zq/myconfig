@@ -1,6 +1,5 @@
 *.bak
 *.swp
-.env
 *.log
-.work_enabled
-.looks_enabled
+identity.env
+.git_identity.bak
