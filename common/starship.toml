@@ -10,6 +10,7 @@ disabled = false
 
 [hostname]
 ssh_only = false
+aliases = { "tommy-VMware-Virtual-Platform" = "myVM" }
 style = "bg:#ff3700 fg:#000000"
 format = "[ $hostname ]($style)[](fg:#ff3700 bg:#ff6e00)"
 disabled = false
