@@ -403,7 +403,7 @@ case "${1:-}" in
         install_binary bat sharkdp/bat "$(rust_pattern gnu)"
         install_binary delta dandavison/delta "$(rust_pattern gnu)"
         install_binary btop aristocratos/btop "$(rust_pattern musl)"
-        install_binary starship starship/starship "$(rust_pattern gnu)"
+        install_binary starship starship/starship "$(rust_pattern musl)"
         install_binary rg BurntSushi/ripgrep "$(rust_pattern musl)"
         install_binary fd sharkdp/fd "$(rust_pattern gnu)"
         install_binary zoxide ajeetdsouza/zoxide "$(rust_pattern musl)"
